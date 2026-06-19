@@ -12,7 +12,7 @@ from models import Player, Enemy, PowerUp, Particle, Star
 class Game:
     def __init__(self):
         self.screen = pygame.display.set_mode((W, H))
-        pygame.display.set_caption("🌌 ALIEN INVASION – Neo Cyber ")
+        pygame.display.set_caption(" ALIEN INVASION – Neo Cyber ")
         self.clock = pygame.time.Clock()
 
         # Hệ thống Font chữ hiện đại
@@ -211,7 +211,7 @@ class Game:
         self.enemies.clear()
         self.e_bullets.clear()
         self.screen_shake = 18
-        self.flash_msg = "💣 BOMB DETONATED!"
+        self.flash_msg = " BOMB DETONATED!"
         self.flash_t = 30
 
     def draw(self):
@@ -242,39 +242,61 @@ class Game:
         pygame.draw.rect(surf, PURPLE, (20, 20, W - 40, H - 40), 2, border_radius=15)
         pygame.draw.rect(surf, CYAN, (24, 24, W - 48, H - 48), 1, border_radius=12)
 
-        # Chữ tiêu đề đổi màu Gradient cầu vồng mịn màng
+        # === 1. SỬA LỖI TIÊU ĐỀ: Tính tổng chiều rộng thực tế để chữ không bị đè nhau ===
         title_str = "ALIEN INVASION"
-        start_x = W // 2 - (len(title_str) * 32) // 2
+        total_width = sum(self.font_big.render(ch, True, (0, 0, 0)).get_width() for ch in title_str)
+        start_x = W // 2 - total_width // 2
+
+        current_x = start_x
         for i, ch in enumerate(title_str):
             hue = (i * 18 + t * 90) % 360
             c = pygame.Color(0)
             c.hsva = (hue, 85, 100, 100)
-            lbl = self.font_big.render(ch, True, c)
-            surf.blit(lbl, (start_x + i * 34, 120))
 
-        sub = self.font_sm.render("⚡ NEO CYBER SPACE SHOOTER ⚡", True, CYAN)
+            lbl = self.font_big.render(ch, True, c)
+            surf.blit(lbl, (current_x, 120))
+            current_x += lbl.get_width()  # Cộng dồn chiều rộng thực tế của từng chữ
+
+        sub = self.font_sm.render(" NEO CYBER SPACE SHOOTER ", True, CYAN)
         surf.blit(sub, (W // 2 - sub.get_width() // 2, 195))
 
         # Khung hộp chứa hướng dẫn nút bấm (Glassmorphism card)
+        box_x = W // 2 - 200
         box_y = 250
-        pygame.draw.rect(surf, (20, 20, 40), (W // 2 - 200, box_y, 400, 320), border_radius=10)
-        pygame.draw.rect(surf, CYAN, (W // 2 - 200, box_y, 400, 320), 1, border_radius=10)
+        box_w = 400
+        box_h = 320
+        pygame.draw.rect(surf, (20, 20, 40), (box_x, box_y, box_w, box_h), border_radius=10)
+        pygame.draw.rect(surf, CYAN, (box_x, box_y, box_w, box_h), 1, border_radius=10)
 
+        # === 2. SỬA LỖI CĂN HÀNG: Cấu trúc lại danh sách theo dạng (Label, Value, Color) ===
         lines = [
-            ("🎮 ĐIỀU KHIỂN:", YELLOW),
-            ("WASD hoặc Phím mũi tên", WHITE),
-            ("🚀 Vũ khí: TỰ ĐỘNG BẮN", CYAN),
-            ("Phím [B]: Kích hoạt Bom", RED),
-            ("-----------------", GRAY),
-            ("🔋 VẬT PHẨM (POWER-UP):", YELLOW),
-            ("⚡ RAPID   - Tăng tốc bắn", YELLOW),
-            ("🛡 SHIELD  - Bổ sung giáp", GREEN),
-            ("✦ TRIPLE  - Đạn tỏa 3 tia", PURPLE),
-            ("💣 BOMB    - Quét sạch map", RED),
+            ("ĐIỀU KHIỂN:", "", YELLOW),
+            ("WASD / Phím mũi tên", " - Di chuyển", WHITE),
+            ("Vũ khí", " - TỰ ĐỘNG BẮN", CYAN),
+            ("Phím [B]", " - Kích hoạt Bom", RED),
+            ("-----------------------------------", "", GRAY),
+            ("VẬT PHẨM (POWER-UP):", "", YELLOW),
+            ("RAPID", " - Tăng tốc bắn", YELLOW),
+            ("SHIELD", " - Bổ sung giáp", GREEN),
+            ("TRIPLE", " - Đạn tỏa 3 tia", PURPLE),
+            ("BOMB", " - Quét sạch map", RED),
         ]
-        for i, (line, col) in enumerate(lines):
-            t2 = self.font_sm.render(line, True, col)
-            surf.blit(t2, (W // 2 - t2.get_width() // 2, box_y + 15 + i * 28))
+
+        text_start_x = box_x + 35  # Ghim lề trái thụt vào trong hộp 35px
+        COL_WIDTH = 20  # Số lượng ký tự cố định dành cho cột bên trái
+
+        for i, item in enumerate(lines):
+            label, value, col = item
+
+            if value != "":
+                # Tự động bù dấu cách vào bên phải nhãn (Label) cho đủ 20 ký tự
+                final_text = f"{label.ljust(COL_WIDTH)}{value}"
+            else:
+                final_text = label
+
+            # SỬ DỤNG self.font_xs (Consolas) là font chữ đơn cách để căn lề chuẩn 100%
+            t2 = self.font_xs.render(final_text, True, col)
+            surf.blit(t2, (text_start_x, box_y + 20 + i * 28))
 
         if int(t * 2) % 2 == 0:
             s = self.font_med.render("[ ẤN ENTER ĐỂ CHIẾN ]", True, GREEN)
@@ -288,20 +310,38 @@ class Game:
         for e in self.enemies:    e.draw(surf)
         if self.player.alive:     self.player.draw(surf)
 
-        # --- GUI THANH MÁU & NĂNG LƯỢNG KỸ THUẬT SỐ CHUẨN RPG ---
+        # === ĐÃ SỬA: Chuyển thanh máu cũ thành các Ô BLOCK năng lượng xếp hàng ngang ===
         hud_y = 15
-        pygame.draw.rect(surf, (40, 40, 50), (20, hud_y, 160, 18), border_radius=4)
+        start_x = 20
+        block_w = 18  # Độ rộng của mỗi ô máu
+        block_h = 14  # Chiều cao của mỗi ô máu
+        gap = 6  # Khoảng cách giữa các ô
 
-        # Phần ruột hiển thị lượng HP thật của người chơi
-        hp_w = int(160 * (self.player.hp / self.player.max_hp))
-        if hp_w > 0:
-            hp_color = GREEN if self.player.hp > 1 else RED
-            pygame.draw.rect(surf, hp_color, (20, hud_y, hp_w, 18), border_radius=4)
-        pygame.draw.rect(surf, WHITE, (20, hud_y, 160, 18), 1, border_radius=4)
+        # Vẽ chữ "HP" nhỏ ở đầu làm nhãn định vị
+        hp_lbl = self.font_xs.render("HP", True, WHITE)
+        surf.blit(hp_lbl, (start_x, hud_y - 1))
 
-        # Text "HP" nhỏ đè lên trên thanh
-        hp_text = self.font_xs.render(f"HP: {self.player.hp}/{self.player.max_hp}", True, WHITE)
-        surf.blit(hp_text, (30, hud_y + 1))
+        # Vòng lặp chạy từ 0 đến max_hp (Số lượng ô máu tối đa của người chơi)
+        for i in range(self.player.max_hp):
+            # Tính toán tọa độ X dịch dần sang phải cho từng ô
+            bx = start_x + 25 + i * (block_w + gap)
+
+            if i < self.player.hp:
+                # Nếu i nhỏ hơn số HP hiện tại -> Ô máu này đang đầy (Người chơi còn sống)
+                hp_color = GREEN if self.player.hp > 1 else RED
+
+                # [LỰA CHỌN 1]: Kiểu ô vuông góc cạnh nguyên khối chuẩn Cyberpunk
+                pygame.draw.rect(surf, hp_color, (bx, hud_y, block_w, block_h), border_radius=3)
+
+                # [LỰA CHỌN 2]: Nếu bạn muốn đổi sang hình THOI (Trái tim công nghệ),
+                # hãy xóa ký tự # ở 3 dòng dưới này đi và thêm dấu # vào dòng pygame.draw.rect ở trên:
+                # points = [(bx + block_w//2, hud_y), (bx + block_w, hud_y + block_h//2),
+                #           (bx + block_w//2, hud_y + block_h), (bx, hud_y + block_h//2)]
+                # pygame.draw.polygon(surf, hp_color, points)
+            else:
+                # Nếu i lớn hơn hoặc bằng HP hiện tại -> Ô máu đã bị mất do dính đạn
+                # Vẽ một khung viền rỗng màu xám mờ để báo hiệu mất mạng
+                pygame.draw.rect(surf, (60, 60, 70), (bx, hud_y, block_w, block_h), 1, border_radius=3)
 
         # Hiển thị Điểm số & Kỷ lục dạng Digital sắc nét chính giữa HUD
         sc = self.font_med.render(f"{self.player.score:06d}", True, CYAN)
@@ -314,24 +354,27 @@ class Game:
         lv = self.font_med.render(f"STG {self.level}", True, WHITE)
         surf.blit(lv, (W - lv.get_width() - 20, 8))
 
-        # Khung trạng thái chứa vũ khí bổ trợ ở góc dưới trái màn hình góc cạnh
         px2 = 20
         py2 = H - 36
+
         if self.player.rapid_timer > 0:
-            pygame.draw.rect(surf, (80, 70, 20), (px2, py2, 75, 22), border_radius=5)
-            t2 = self.font_xs.render(f"⚡ RAPID:{self.player.rapid_timer // 60}s", True, YELLOW)
-            surf.blit(t2, (px2 + 6, py2 + 3))
-            px2 += 85
-        if self.player.triple_timer > 0:
-            pygame.draw.rect(surf, (50, 20, 80), (px2, py2, 85, 22), border_radius=5)
-            t2 = self.font_xs.render(f"✦ TRIPLE:{self.player.triple_timer // 60}s", True, PURPLE)
+            pygame.draw.rect(surf, (80, 70, 20), (px2, py2, 85, 22), border_radius=5)
+            t2 = self.font_xs.render(f"Rapid: {self.player.rapid_timer // 60}s", True, YELLOW)
             surf.blit(t2, (px2 + 6, py2 + 3))
             px2 += 95
-        if self.player.has_bomb:
-            pygame.draw.rect(surf, (80, 20, 20), (px2, py2, 70, 22), border_radius=5)
-            pygame.draw.rect(surf, RED, (px2, py2, 70, 22), 1, border_radius=5)
-            t2 = self.font_xs.render("💣 BOMB [B]", True, WHITE)
+
+        if self.player.triple_timer > 0:
+            pygame.draw.rect(surf, (50, 20, 80), (px2, py2, 90, 22), border_radius=5)
+            t2 = self.font_xs.render(f"Triple: {self.player.triple_timer // 60}s", True, PURPLE)
             surf.blit(t2, (px2 + 6, py2 + 3))
+            px2 += 100
+
+        if self.player.has_bomb:
+            pygame.draw.rect(surf, (80, 20, 20), (px2, py2, 75, 22), border_radius=5)
+            pygame.draw.rect(surf, RED, (px2, py2, 75, 22), 1, border_radius=5)
+            t2 = self.font_xs.render("Bomb [B]", True, WHITE)
+            surf.blit(t2, (px2 + 8, py2 + 3))
+        # =====================================================================
 
         # Dòng chữ thông báo Sự kiện lớn (Wave mới, Level up) dạng phóng to thu nhỏ
         if self.flash_t > 0:
