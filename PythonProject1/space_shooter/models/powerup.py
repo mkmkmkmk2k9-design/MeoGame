@@ -6,10 +6,10 @@ from config import H, BLACK, WHITE, YELLOW, GREEN, PURPLE, RED
 
 class PowerUp:
     TYPES = {
-        'rapid': (YELLOW, '⚡ RAPID', '2x bắn nhanh'),
-        'shield': (GREEN, '🛡 SHIELD', '+1 máu'),
-        'triple': (PURPLE, '✦ TRIPLE', '3 viên đạn'),
-        'bomb': (RED, '💣 BOMB', 'Diệt tất cả!'),
+        'rapid': (YELLOW, ' RAPID', '2x bắn nhanh'),
+        'shield': (GREEN, ' SHIELD', '+1 máu'),
+        'triple': (PURPLE, ' TRIPLE', '3 viên đạn'),
+        'bomb': (RED, ' BOMB', 'Diệt tất cả!'),
     }
 
     def __init__(self, x, y):
