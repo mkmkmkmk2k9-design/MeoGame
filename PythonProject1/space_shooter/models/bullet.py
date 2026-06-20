@@ -3,7 +3,7 @@ import pygame
 from config import H, W, WHITE, RED, ORANGE, CYAN
 
 class Bullet:
-    def __init__(self, x, y, dy=-12, dx=0, color=CYAN, radius=4, damage=1):
+    def __init__(self, x, y, dy=-12, dx=0, color=CYAN, radius=4, damage=1.5):
         self.x, self.y = float(x), float(y)
         self.dx, self.dy = dx, dy
         self.color = color
